@@ -1,0 +1,101 @@
+-- load mqtt module
+local mqtt = require("mqtt")
+
+-- create mqtt client
+local client = mqtt.client{
+	-- NOTE: this broker is not working sometimes; comment username = "..." below if you still want to use it
+	-- uri = "test.mosquitto.org",
+	uri = "mqtt.flespi.io",
+	-- NOTE: more about flespi tokens: https://flespi.com/kb/tokens-access-keys-to-flespi-platform
+	username = "stPwSVV73Eqw5LSv0iMXbc4EguS7JyuZR9lxU5uLxI5tiNM8ToTVqNpu85pFtJv9",
+	clean = true,
+}
+print("created MQTT client", client)
+
+client:on{
+	connect = function(connack)
+		if connack.rc ~= 0 then
+			print("connection to broker failed:", connack:reason_string(), connack)
+			return
+		end
+		print("connected:", connack) -- successful connection
+
+		-- subscribe to test topic and publish message after it
+		assert(client:subscribe{ topic="luamqtt/#", qos=1, callback=function(suback)
+			print("subscribed:", suback)
+
+			-- publish test message
+			print('publishing test message "hello" to "luamqtt/simpletest" topic...')
+			assert(client:publish{
+				topic = "luamqtt/simpletest",
+				payload = "hello",
+				qos = 1
+			})
+		end})
+	end,
+
+	message = function(msg)
+		assert(client:acknowledge(msg))
+
+		print("received:", msg)
+		print("disconnecting...")
+		assert(client:disconnect())
+	end,
+
+	error = function(err)
+		print("MQTT client error:", err)
+	end,
+}
+
+
+
+
+function init(self)
+	print("running ioloop for it")
+	mqtt.run_ioloop(client)
+
+	print("done, ioloop is stopped")
+end
+
+function final(self)
+	-- Add finalization code here
+	-- Learn more: https://defold.com/manuals/script/
+	-- Remove this function if not needed
+end
+
+function update(self, dt)
+	-- Add update code here
+	-- Learn more: https://defold.com/manuals/script/
+	-- Remove this function if not needed
+end
+
+function fixed_update(self, dt)
+	-- This function is only called if 'Use Fixed Timestep' is enabled in the Physics section of game.project
+	-- Add update code here
+	-- Learn more: https://defold.com/manuals/script/
+	-- Remove this function if not needed
+end
+
+function on_message(self, message_id, message, sender)
+	-- Add message-handling code here
+	-- Learn more: https://defold.com/manuals/message-passing/
+	-- Remove this function if not needed
+end
+
+function on_input(self, action_id, action)
+	-- Add input-handling code here. The game object this script is attached to
+	-- must have acquired input focus:
+	--
+	--    msg.post(".", "acquire_input_focus")
+	--
+	-- All mapped input bindings will be received. Mouse and touch input will
+	-- be received regardless of where on the screen it happened.
+	-- Learn more: https://defold.com/manuals/input/
+	-- Remove this function if not needed
+end
+
+function on_reload(self)
+	-- Add reload-handling code here
+	-- Learn more: https://defold.com/manuals/hot-reload/
+	-- Remove this function if not needed
+end
